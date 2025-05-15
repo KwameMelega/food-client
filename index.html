@@ -15,54 +15,55 @@
 
   <!-- ✅ OneSignal Init -->
   <script>
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function () {
-      OneSignal.init({
-        appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c", // Your actual App ID
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      await OneSignal.init({
+        appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
         notifyButton: {
           enable: false
         },
-        autoResubscribe: true,
-        serviceWorkerPath: "OneSignalSDKWorker.js", // Make sure this file exists at root
+        serviceWorkerPath: "OneSignalSDKWorker.js"
       });
 
-  // Show prompt
-  OneSignal.showSlidedownPrompt();
+      // ✅ Show prompt
+      OneSignal.User.PushSubscription.showNativePrompt();
 
-  // Wrap async logic in an async function
-  async function handlePushSubscription() {
-    // Wait for subscription
-    const isPushEnabled = await OneSignal.Notifications.isPushEnabled();
-    if (!isPushEnabled) {
-      await OneSignal.Notifications.requestPermission();
-    }
+      // ✅ Wait until permission is granted
+      const isPushEnabled = await OneSignal.User.PushSubscription.isSubscribed();
+      if (!isPushEnabled) {
+        console.warn("User has not subscribed to push.");
+        return;
+      }
 
-    const userId = await OneSignal.User.getId();
+      // ✅ Get user ID
+      const userId = await OneSignal.User.getId();
 
-    // Check if name already set in localStorage
-    if (!localStorage.getItem("username_set")) {
-      document.getElementById("name-capture").style.display = "block";
-    }
+      // ✅ Check if name is already set
+      if (!localStorage.getItem("username_set")) {
+        document.getElementById("name-capture").style.display = "block";
+      }
 
-    window.submitName = async function () {
-      const username = document.getElementById("username-input").value;
-      if (!username) return alert("Please enter your name.");
+      // ✅ Assign name saving logic
+      window.submitName = async function () {
+        const username = document.getElementById("username-input").value;
+        if (!username) return alert("Please enter your name.");
 
-      // Save to your backend
-      await fetch("https://your-backend.com/save-name", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, username })
-      });
-
-      localStorage.setItem("username_set", "true");
-      document.getElementById("name-capture").style.display = "none";
-    };
-  }
-
-  handlePushSubscription();
+        try {
+          await fetch("https://your-backend.com/save-name", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, username })
+          });
+          localStorage.setItem("username_set", "true");
+          document.getElementById("name-capture").style.display = "none";
+        } catch (e) {
+          alert("Failed to save name.");
+          console.error(e);
+        }
+      };
     });
   </script>
+
 </head>
 
 <body style="text-align: center; padding: 0; border: 0; margin: 0;">
