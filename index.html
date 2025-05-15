@@ -15,52 +15,52 @@
 
   <!-- ✅ OneSignal Init -->
   <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      await OneSignal.init({
-        appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
-        notifyButton: { enable: false },
-        serviceWorkerPath: "OneSignalSDKWorker.js"
-      });
+    document.addEventListener("DOMContentLoaded", function () {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function (OneSignal) {
+        await OneSignal.init({
+          appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
+          notifyButton: { enable: false },
+          serviceWorkerPath: "OneSignalSDKWorker.js"
+        });
 
-      // ✅ Show native browser prompt
-      OneSignal.User.PushSubscription.showNativePrompt();
+        // Show prompt
+        OneSignal.User.PushSubscription.showNativePrompt();
 
-      // ✅ Wait for subscription
-      const isPushEnabled = await OneSignal.User.PushSubscription.isSubscribed();
-      if (!isPushEnabled) {
-        console.warn("User has not subscribed to push.");
-        return;
-      }
-      const tags = await OneSignal.User.getTags();
-
-      console.log("Current OneSignal tags:", tags); // 👈 Add this line
-
-      if (!tags || !tags.username) {
-        console.log("Username not set — showing input"); // 👈 Add this line
-        document.getElementById("name-capture").style.display = "block";
-      } else {
-        console.log("Username already set:", tags.username); // 👈 Add this line
-      }
-      if (!tags || !tags.username) {
-        // Show name input only if username tag not set
-        document.getElementById("name-capture").style.display = "block";
-      }
-
-      // ✅ Save name as OneSignal tag
-      window.submitName = async function () {
-        const username = document.getElementById("username-input").value;
-        if (!username) return alert("Please enter your name.");
-
-        try {
-          await OneSignal.User.addTag("username", username);
-          document.getElementById("name-capture").style.display = "none";
-        } catch (e) {
-          alert("Failed to save name.");
-          console.error(e);
+        // Wait for subscription
+        const isPushEnabled = await OneSignal.User.PushSubscription.isSubscribed();
+        if (!isPushEnabled) {
+          console.warn("User has not subscribed to push.");
+          return;
         }
-      };
+
+        // Get tags
+        const tags = await OneSignal.User.getTags();
+        console.log("Tags:", tags);
+
+        if (!tags || !tags.username) {
+          console.log("No username tag found. Showing input.");
+          document.getElementById("name-capture").style.display = "block";
+        } else {
+          console.log("Username tag already set:", tags.username);
+        }
+
+        // Save name as tag
+        window.submitName = async function () {
+          const username = document.getElementById("username-input").value;
+          if (!username) return alert("Please enter your name.");
+
+          try {
+            await OneSignal.User.addTag("username", username);
+            document.getElementById("name-capture").style.display = "none";
+          } catch (e) {
+            alert("Failed to save name.");
+            console.error(e);
+          }
+        };
+      });
     });
+
   </script>
 </head>
 
