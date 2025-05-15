@@ -4,32 +4,37 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | House Menu</title>
-    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
-<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
-<script>
-  window.OneSignal = window.OneSignal || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
-      serviceWorkerPath: "OneSignalSDKWorker.js",  // Required!
-      notifyButton: {
-        enable: false
-      },
-      autoResubscribe: true,	
-    });
-    // This is what actually triggers the browser permission prompt
-    OneSignal.showSlidedownPrompt();
-  });
-</script>
-<link rel="manifest" href="manifest.json">
-</script>
+
+    <!-- ✅ Only include ONE OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+
+    <!-- ✅ Link manifest.json -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- ✅ OneSignal Init -->
+    <script>
+      window.OneSignal = window.OneSignal || [];
+      OneSignal.push(function() {
+        OneSignal.init({
+          appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c", // Your actual App ID
+          notifyButton: {
+            enable: false
+          },
+          autoResubscribe: true,
+          serviceWorkerPath: "OneSignalSDKWorker.js", // Make sure this file exists at root
+        });
+
+        // Show prompt
+        OneSignal.showSlidedownPrompt();
+      });
+    </script>
   </head>
+
   <body style="text-align: center; padding: 0; border: 0; margin: 0;">
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
     <script src="Build/food-client.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
@@ -51,9 +56,7 @@
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "House Menu",
-        productVersion: "1.0",
-        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+        productVersion: "1.0"
       });
     </script>
   </body>
