@@ -15,62 +15,65 @@
 
   <!-- ✅ OneSignal + Name Input Logic -->
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function (OneSignal) {
-        console.log("[OneSignal] Initializing...");
+   >
+      document.addEventListener("DOMContentLoaded", function () {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+          console.log("[OneSignal] Initializing...");
 
-        await OneSignal.init({
-          appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
-          notifyButton: { enable: false },
-          serviceWorkerPath: "OneSignalSDKWorker.js"
-        });
+          await OneSignal.init({
+            appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
+            notifyButton: { enable: false },
+            serviceWorkerPath: "OneSignalSDKWorker.js"
+          });
 
-        console.log("[OneSignal] Initialized.");
+          console.log("[OneSignal] Initialized.");
 
-        // ✅ Show push prompt using v16 API
-        const isSubscribed = await OneSignal.User.PushSubscription.isSubscribed();
-        console.log("[OneSignal] isSubscribed:", isSubscribed);
+          // ✅ Get subscription state
+          const subscription = await OneSignal.User.PushSubscription.getSubscription();
+          console.log("[OneSignal] Subscription state:", subscription);
 
-        if (!isSubscribed) {
-          console.log("[OneSignal] Asking for push permission...");
-          await OneSignal.User.PushSubscription.optIn();
-        }
-
-        if (!(await OneSignal.User.PushSubscription.isSubscribed())) {
-          console.warn("[OneSignal] User did not subscribe to push.");
-          return;
-        }
-
-        const userId = await OneSignal.User.getId();
-        console.log("[OneSignal] User ID:", userId);
-
-        // ✅ Check for saved username
-        const tags = await OneSignal.User.getTags();
-        console.log("[OneSignal] Current tags:", tags);
-
-        if (!tags || !tags.username) {
-          document.getElementById("name-capture").style.display = "block";
-        } else {
-          console.log("[OneSignal] Username already set:", tags.username);
-        }
-
-        window.submitName = async function () {
-          const username = document.getElementById("username-input").value.trim();
-          if (!username) return alert("Please enter your name.");
-
-          try {
-            await OneSignal.User.addTag("username", username);
-            console.log("[OneSignal] Username tag set:", username);
-            document.getElementById("name-capture").style.display = "none";
-          } catch (err) {
-            console.error("Failed to set username tag:", err);
-            alert("Failed to save your name. Please try again.");
+          if (!subscription || !subscription.subscribed) {
+            console.log("[OneSignal] Requesting permission...");
+            await OneSignal.User.PushSubscription.optIn();
           }
-        };
-      });
-    });
 
+          // ✅ Re-check subscription status
+          const confirmed = await OneSignal.User.PushSubscription.getSubscription();
+          if (!confirmed?.subscribed) {
+            console.warn("[OneSignal] User did not subscribe to push.");
+            return;
+          }
+
+          const userId = await OneSignal.User.getId();
+          console.log("[OneSignal] User ID:", userId);
+
+          // ✅ Check if username already set via tag
+          const tags = await OneSignal.User.getTags();
+          console.log("[OneSignal] Current tags:", tags);
+
+          if (!tags || !tags.username) {
+            document.getElementById("name-capture").style.display = "block";
+          } else {
+            console.log("[OneSignal] Username already set:", tags.username);
+          }
+
+          // ✅ Allow submitting the name
+          window.submitName = async function () {
+            const username = document.getElementById("username-input").value.trim();
+            if (!username) return alert("Please enter your name.");
+
+            try {
+              await OneSignal.User.addTag("username", username);
+              console.log("[OneSignal] Username set:", username);
+              document.getElementById("name-capture").style.display = "none";
+            } catch (err) {
+              console.error("[OneSignal] Failed to set username:", err);
+              alert("Failed to save your name.");
+            }
+          };
+        });
+      });
   </script>
 </head>
 
