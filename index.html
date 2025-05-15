@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-us">
+
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -28,7 +29,7 @@
         console.log("[OneSignal] Initialized.");
 
         // Show permission prompt
-        OneSignal.User.PushSubscription.showNativePrompt();
+        await OneSignal.User.PushSubscription.optIn();
 
         // Wait until subscribed
         const isSubscribed = await OneSignal.User.PushSubscription.isSubscribed();
@@ -69,8 +70,7 @@
 
 <body style="text-align: center; padding: 0; border: 0; margin: 0;">
   <!-- ✅ Name Capture Popup -->
-  <div id="name-capture"
-       style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+  <div id="name-capture" style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
               z-index: 9999; background: white; padding: 1em; border-radius: 8px;
               box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none;">
     <p>Enter your name:</p>
@@ -80,7 +80,7 @@
 
   <!-- ✅ Unity WebGL -->
   <canvas id="unity-canvas" width=960 height=600 tabindex="-1"
-          style="width: 960px; height: 600px; background: #231F20"></canvas>
+    style="width: 960px; height: 600px; background: #231F20"></canvas>
   <script src="Build/food-client.loader.js"></script>
   <script>
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -108,4 +108,5 @@
     });
   </script>
 </body>
+
 </html>
