@@ -28,18 +28,24 @@
 
         console.log("[OneSignal] Initialized.");
 
-        // Show permission prompt
-        await OneSignal.User.PushSubscription.optIn();
-
-        // Wait until subscribed
+        // ✅ Show push prompt using v16 API
         const isSubscribed = await OneSignal.User.PushSubscription.isSubscribed();
         console.log("[OneSignal] isSubscribed:", isSubscribed);
-        if (!isSubscribed) return;
+
+        if (!isSubscribed) {
+          console.log("[OneSignal] Asking for push permission...");
+          await OneSignal.User.PushSubscription.optIn();
+        }
+
+        if (!(await OneSignal.User.PushSubscription.isSubscribed())) {
+          console.warn("[OneSignal] User did not subscribe to push.");
+          return;
+        }
 
         const userId = await OneSignal.User.getId();
         console.log("[OneSignal] User ID:", userId);
 
-        // Check for name tag
+        // ✅ Check for saved username
         const tags = await OneSignal.User.getTags();
         console.log("[OneSignal] Current tags:", tags);
 
@@ -49,7 +55,6 @@
           console.log("[OneSignal] Username already set:", tags.username);
         }
 
-        // Submit name handler
         window.submitName = async function () {
           const username = document.getElementById("username-input").value.trim();
           if (!username) return alert("Please enter your name.");
@@ -65,6 +70,7 @@
         };
       });
     });
+
   </script>
 </head>
 
