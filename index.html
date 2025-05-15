@@ -1,64 +1,106 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="unity-template" content="true">
-    <title>Unity Web Player | House Menu</title>
 
-    <!-- ✅ Only include ONE OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="unity-template" content="true">
+  <title>Unity Web Player | House Menu</title>
 
-    <!-- ✅ Link manifest.json -->
-    <link rel="manifest" href="manifest.json">
+  <!-- ✅ Only include ONE OneSignal SDK -->
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 
-    <!-- ✅ OneSignal Init -->
-    <script>
-      window.OneSignal = window.OneSignal || [];
-      OneSignal.push(function() {
-        OneSignal.init({
-          appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c", // Your actual App ID
-          notifyButton: {
-            enable: false
-          },
-          autoResubscribe: true,
-          serviceWorkerPath: "OneSignalSDKWorker.js", // Make sure this file exists at root
-        });
+  <!-- ✅ Link manifest.json -->
+  <link rel="manifest" href="manifest.json">
 
-        // Show prompt
-        OneSignal.showSlidedownPrompt();
+  <!-- ✅ OneSignal Init -->
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function () {
+      OneSignal.init({
+        appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c", // Your actual App ID
+        notifyButton: {
+          enable: false
+        },
+        autoResubscribe: true,
+        serviceWorkerPath: "OneSignalSDKWorker.js", // Make sure this file exists at root
       });
-    </script>
-  </head>
 
-  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
-    <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
-    <script src="Build/food-client.loader.js"></script>
-    <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+  // Show prompt
+  OneSignal.showSlidedownPrompt();
 
-        var canvas = document.querySelector("#unity-canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.position = "fixed";
+  // Wrap async logic in an async function
+  async function handlePushSubscription() {
+    // Wait for subscription
+    const isPushEnabled = await OneSignal.Notifications.isPushEnabled();
+    if (!isPushEnabled) {
+      await OneSignal.Notifications.requestPermission();
+    }
 
-        document.body.style.textAlign = "left";
-      }
+    const userId = await OneSignal.User.getId();
 
-      createUnityInstance(document.querySelector("#unity-canvas"), {
-        arguments: [],
-        dataUrl: "Build/food-client.data",
-        frameworkUrl: "Build/food-client.framework.js",
-        codeUrl: "Build/food-client.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "House Menu",
-        productVersion: "1.0"
+    // Check if name already set in localStorage
+    if (!localStorage.getItem("username_set")) {
+      document.getElementById("name-capture").style.display = "block";
+    }
+
+    window.submitName = async function () {
+      const username = document.getElementById("username-input").value;
+      if (!username) return alert("Please enter your name.");
+
+      // Save to your backend
+      await fetch("https://your-backend.com/save-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, username })
       });
-    </script>
-  </body>
+
+      localStorage.setItem("username_set", "true");
+      document.getElementById("name-capture").style.display = "none";
+    };
+  }
+
+  handlePushSubscription();
+    });
+  </script>
+</head>
+
+<body style="text-align: center; padding: 0; border: 0; margin: 0;">
+  <div id="name-capture"
+    style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; background: white; padding: 1em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none;">
+    <p>Enter your name:</p>
+    <input type="text" id="username-input" />
+    <button onclick="submitName()">Submit</button>
+  </div>
+  <canvas id="unity-canvas" width=960 height=600 tabindex="-1"
+    style="width: 960px; height: 600px; background: #231F20"></canvas>
+  <script src="Build/food-client.loader.js"></script>
+  <script>
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+
+      var canvas = document.querySelector("#unity-canvas");
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.position = "fixed";
+
+      document.body.style.textAlign = "left";
+    }
+
+    createUnityInstance(document.querySelector("#unity-canvas"), {
+      arguments: [],
+      dataUrl: "Build/food-client.data",
+      frameworkUrl: "Build/food-client.framework.js",
+      codeUrl: "Build/food-client.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "DefaultCompany",
+      productName: "House Menu",
+      productVersion: "1.0"
+    });
+  </script>
+</body>
+
 </html>
