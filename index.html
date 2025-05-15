@@ -11,7 +11,10 @@
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
+      autoResubscribe: true,	
     });
+      OneSignal.Notifications.requestPermission();
+
   });
 </script>
 <link rel="manifest" href="manifest.json">
