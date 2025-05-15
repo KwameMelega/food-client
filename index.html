@@ -7,7 +7,7 @@
   <meta name="unity-template" content="true">
   <title>Unity Web Player | House Menu</title>
 
-  <!-- ✅ Only include ONE OneSignal SDK -->
+  <!-- ✅ OneSignal SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 
   <!-- ✅ Link manifest.json -->
@@ -19,42 +19,34 @@
     OneSignalDeferred.push(async function (OneSignal) {
       await OneSignal.init({
         appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
-        notifyButton: {
-          enable: false
-        },
+        notifyButton: { enable: false },
         serviceWorkerPath: "OneSignalSDKWorker.js"
       });
 
-      // ✅ Show prompt
+      // ✅ Show native browser prompt
       OneSignal.User.PushSubscription.showNativePrompt();
 
-      // ✅ Wait until permission is granted
+      // ✅ Wait for subscription
       const isPushEnabled = await OneSignal.User.PushSubscription.isSubscribed();
       if (!isPushEnabled) {
         console.warn("User has not subscribed to push.");
         return;
       }
 
-      // ✅ Get user ID
-      const userId = await OneSignal.User.getId();
-
-      // ✅ Check if name is already set
-      if (!localStorage.getItem("username_set")) {
+      // ✅ Get OneSignal tags
+      const tags = await OneSignal.User.getTags();
+      if (!tags || !tags.username) {
+        // Show name input only if username tag not set
         document.getElementById("name-capture").style.display = "block";
       }
 
-      // ✅ Assign name saving logic
+      // ✅ Save name as OneSignal tag
       window.submitName = async function () {
         const username = document.getElementById("username-input").value;
         if (!username) return alert("Please enter your name.");
 
         try {
-          await fetch("https://your-backend.com/save-name", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, username })
-          });
-          localStorage.setItem("username_set", "true");
+          await OneSignal.User.addTag("username", username);
           document.getElementById("name-capture").style.display = "none";
         } catch (e) {
           alert("Failed to save name.");
@@ -63,18 +55,21 @@
       };
     });
   </script>
-
 </head>
 
 <body style="text-align: center; padding: 0; border: 0; margin: 0;">
+  <!-- ✅ Username Input -->
   <div id="name-capture"
     style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; background: white; padding: 1em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none;">
     <p>Enter your name:</p>
     <input type="text" id="username-input" />
     <button onclick="submitName()">Submit</button>
   </div>
+
+  <!-- ✅ Unity Canvas -->
   <canvas id="unity-canvas" width=960 height=600 tabindex="-1"
     style="width: 960px; height: 600px; background: #231F20"></canvas>
+
   <script src="Build/food-client.loader.js"></script>
   <script>
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
