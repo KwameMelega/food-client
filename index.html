@@ -1,95 +1,98 @@
 <!DOCTYPE html>
 <html lang="en-us">
-
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="unity-template" content="true">
   <title>Unity Web Player | House Menu</title>
 
-  <!-- ✅ OneSignal SDK -->
-  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+  <!-- ✅ OneSignal SDK (deferred loading) -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
-  <!-- ✅ Link manifest.json -->
+  <!-- ✅ Link manifest -->
   <link rel="manifest" href="manifest.json">
 
-  <!-- ✅ OneSignal Init -->
+  <!-- ✅ OneSignal + Name Input Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function (OneSignal) {
+        console.log("[OneSignal] Initializing...");
+
         await OneSignal.init({
           appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
           notifyButton: { enable: false },
           serviceWorkerPath: "OneSignalSDKWorker.js"
         });
 
-        // Show prompt
+        console.log("[OneSignal] Initialized.");
+
+        // Show permission prompt
         OneSignal.User.PushSubscription.showNativePrompt();
 
-        // Wait for subscription
-        const isPushEnabled = await OneSignal.User.PushSubscription.isSubscribed();
-        if (!isPushEnabled) {
-          console.warn("User has not subscribed to push.");
-          return;
-        }
+        // Wait until subscribed
+        const isSubscribed = await OneSignal.User.PushSubscription.isSubscribed();
+        console.log("[OneSignal] isSubscribed:", isSubscribed);
+        if (!isSubscribed) return;
 
-        // Get tags
+        const userId = await OneSignal.User.getId();
+        console.log("[OneSignal] User ID:", userId);
+
+        // Check for name tag
         const tags = await OneSignal.User.getTags();
-        console.log("Tags:", tags);
+        console.log("[OneSignal] Current tags:", tags);
 
         if (!tags || !tags.username) {
-          console.log("No username tag found. Showing input.");
           document.getElementById("name-capture").style.display = "block";
         } else {
-          console.log("Username tag already set:", tags.username);
+          console.log("[OneSignal] Username already set:", tags.username);
         }
 
-        // Save name as tag
+        // Submit name handler
         window.submitName = async function () {
-          const username = document.getElementById("username-input").value;
+          const username = document.getElementById("username-input").value.trim();
           if (!username) return alert("Please enter your name.");
 
           try {
             await OneSignal.User.addTag("username", username);
+            console.log("[OneSignal] Username tag set:", username);
             document.getElementById("name-capture").style.display = "none";
-          } catch (e) {
-            alert("Failed to save name.");
-            console.error(e);
+          } catch (err) {
+            console.error("Failed to set username tag:", err);
+            alert("Failed to save your name. Please try again.");
           }
         };
       });
     });
-
   </script>
 </head>
 
 <body style="text-align: center; padding: 0; border: 0; margin: 0;">
-  <!-- ✅ Username Input -->
+  <!-- ✅ Name Capture Popup -->
   <div id="name-capture"
-    style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 9999; background: white; padding: 1em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none;">
+       style="position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+              z-index: 9999; background: white; padding: 1em; border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none;">
     <p>Enter your name:</p>
     <input type="text" id="username-input" />
     <button onclick="submitName()">Submit</button>
   </div>
 
-  <!-- ✅ Unity Canvas -->
+  <!-- ✅ Unity WebGL -->
   <canvas id="unity-canvas" width=960 height=600 tabindex="-1"
-    style="width: 960px; height: 600px; background: #231F20"></canvas>
-
+          style="width: 960px; height: 600px; background: #231F20"></canvas>
   <script src="Build/food-client.loader.js"></script>
   <script>
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
       var meta = document.createElement('meta');
       meta.name = 'viewport';
       meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-      document.getElementsByTagName('head')[0].appendChild(meta);
+      document.head.appendChild(meta);
 
       var canvas = document.querySelector("#unity-canvas");
       canvas.style.width = "100%";
       canvas.style.height = "100%";
       canvas.style.position = "fixed";
-
       document.body.style.textAlign = "left";
     }
 
@@ -105,5 +108,4 @@
     });
   </script>
 </body>
-
 </html>
