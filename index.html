@@ -6,16 +6,23 @@
     <title>Unity Web Player | Nkrumah House Menu</title>
     <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 <script>
+<script>
   window.OneSignal = window.OneSignal || [];
   OneSignal.push(function() {
     OneSignal.init({
-      appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
+      appId: "YOUR-ONESIGNAL-APP-ID",
+      safari_web_id: "YOUR-SAFARI-WEB-ID", // optional
       notifyButton: {
         enable: false
       },
       autoResubscribe: true
     });
+
+    // 👉 This line is REQUIRED to actually show the prompt
+    OneSignal.showSlidedownPrompt();
   });
+</script>
+
 </script>
   </head>
   <body style="text-align: center; padding: 0; border: 0; margin: 0;">
