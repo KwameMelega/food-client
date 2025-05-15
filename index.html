@@ -32,9 +32,16 @@
         console.warn("User has not subscribed to push.");
         return;
       }
-
-      // ✅ Get OneSignal tags
       const tags = await OneSignal.User.getTags();
+
+      console.log("Current OneSignal tags:", tags); // 👈 Add this line
+
+      if (!tags || !tags.username) {
+        console.log("Username not set — showing input"); // 👈 Add this line
+        document.getElementById("name-capture").style.display = "block";
+      } else {
+        console.log("Username already set:", tags.username); // 👈 Add this line
+      }
       if (!tags || !tags.username) {
         // Show name input only if username tag not set
         document.getElementById("name-capture").style.display = "block";
