@@ -15,58 +15,65 @@
 
   <!-- ✅ OneSignal + Name Input Logic -->
   <script>
-  window.OneSignal = window.OneSignal || [];
-  OneSignal.push(function () {
-    console.log("[OneSignal] Initializing...");
+      document.addEventListener("DOMContentLoaded", function () {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+          console.log("[OneSignal] Initializing...");
 
-    OneSignal.init({
-      appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
-      notifyButton: {
-        enable: false
-      },
-      serviceWorkerPath: "OneSignalSDKWorker.js"
-    });
+          await OneSignal.init({
+            appId: "0d5ffd40-4afb-44f2-b5f2-5f916e1bd16c",
+            notifyButton: { enable: false },
+            serviceWorkerPath: "OneSignalSDKWorker.js"
+          });
 
-    // Show native permission prompt
-    OneSignal.showSlidedownPrompt();
+          console.log("[OneSignal] Initialized.");
 
-    // After subscription is ready
-    OneSignal.on('subscriptionChange', async function (isSubscribed) {
-      console.log("[OneSignal] Subscription status changed:", isSubscribed);
+          // ✅ Get subscription state
+          const subscription = await OneSignal.User.PushSubscription.getSubscription();
+          console.log("[OneSignal] Subscription state:", subscription);
 
-      if (isSubscribed) {
-        const userId = await OneSignal.getUserId();
-        console.log("[OneSignal] User ID:", userId);
-
-        // Show input only if not already stored
-        if (!localStorage.getItem("username_set")) {
-          document.getElementById("name-capture").style.display = "block";
-        }
-
-        // Attach submit logic
-        window.submitName = async function () {
-          const username = document.getElementById("username-input").value.trim();
-          if (!username) return alert("Please enter your name.");
-
-          try {
-            await fetch("https://your-backend.com/save-name", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId, username })
-            });
-
-            localStorage.setItem("username_set", "true");
-            document.getElementById("name-capture").style.display = "none";
-            console.log("[OneSignal] Username submitted:", username);
-          } catch (err) {
-            console.error("[OneSignal] Failed to save name:", err);
-            alert("Failed to save name.");
+          if (!subscription || !subscription.subscribed) {
+            console.log("[OneSignal] Requesting permission...");
+            await OneSignal.User.PushSubscription.optIn();
           }
-        };
-      }
-    });
-  });
-</script>
+
+          // ✅ Re-check subscription status
+          const confirmed = await OneSignal.User.PushSubscription.getSubscription();
+          if (!confirmed?.subscribed) {
+            console.warn("[OneSignal] User did not subscribe to push.");
+            return;
+          }
+
+          const userId = await OneSignal.User.getId();
+          console.log("[OneSignal] User ID:", userId);
+
+          // ✅ Check if username already set via tag
+          const tags = await OneSignal.User.getTags();
+          console.log("[OneSignal] Current tags:", tags);
+
+          if (!tags || !tags.username) {
+            document.getElementById("name-capture").style.display = "block";
+          } else {
+            console.log("[OneSignal] Username already set:", tags.username);
+          }
+
+          // ✅ Allow submitting the name
+          window.submitName = async function () {
+            const username = document.getElementById("username-input").value.trim();
+            if (!username) return alert("Please enter your name.");
+
+            try {
+              await OneSignal.User.addTag("username", username);
+              console.log("[OneSignal] Username set:", username);
+              document.getElementById("name-capture").style.display = "none";
+            } catch (err) {
+              console.error("[OneSignal] Failed to set username:", err);
+              alert("Failed to save your name.");
+            }
+          };
+        });
+      });
+  </script>
 </head>
 
 <body style="text-align: center; padding: 0; border: 0; margin: 0;">
